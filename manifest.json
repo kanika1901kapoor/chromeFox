@@ -1,0 +1,15 @@
+{
+  "name": "ChromeFox",
+  "version": "1.0.0.0",
+  "description": "Open a new Tab",
+  "icons": {
+    "icon1": "ChromeFox.png" 
+  },
+  "background": { "scripts": ["ChromeFox.js"] },
+  "browser_action": {
+    "default_icon": "ChromeFox.png",
+    "default_title": "Boot into Cloud"
+  },
+  "permissions": ["tabs","https://ec2.amazonaws.com/","https://ec2.ap-northeast-1.amazonaws.com/","https://ec2.us-east-1.amazonaws.com/","https://ec2.sa-east-1.amazonaws.com/","https://ec2.eu-west-1.amazonaws.com/","https://us-east-1.ec2.amazonaws.com/"],
+  "manifest_version": 1
+}

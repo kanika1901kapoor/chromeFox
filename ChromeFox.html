@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html>
+	<head>
+
+		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+		<title>Boot Into Your Cloud</title>
+		<link type="text/css" href="jquery-ui-1.8.23.custom/css/ui-darkness/jquery-ui-1.8.23.custom.css" rel="stylesheet" />
+
+    <link type="text/css" href="css/cloudwatch.css" rel="stylesheet" />
+  <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/combo?2.9.0/build/datatable/assets/skins/sam/datatable.css">
+
+        
+    <style type="text/css">
+      body{ font: 70% "Trebuchet MS", sans-serif; margin: 5px;}
+
+    </style>
+
+      <style type="text/css">
+      @import "aws/DataTables-1.9.2/media/css/demo_page.css";
+      @import "aws/DataTables-1.9.2/media/css/demo_table.css";
+      
+      @import "aws/jquery-picklist-0.9.1/jquery-picklist.css";
+      </style>
+
+<style type="text/css">
+
+section.slide-up-boxes{
+
+  position:absolute;
+  right:50px;
+  height:40px;
+  max-width: 400px;
+}
+
+.slide-up-boxes a { 
+      
+      text-decoration: none;
+      margin: 0 0 20px 0; 
+    
+      border: 1px solid #ccc; 
+      height: 83px; 
+      overflow: hidden; 
+    }
+    
+    .slide-up-boxes h1 { 
+      color: #333; 
+      text-align: center;
+      height: 40px; 
+      font: italic 18px/65px Georgia, Serif;   
+       opacity: 1;
+       -webkit-transition: all 0.2s linear; 
+       -moz-transition: all 0.2s linear; 
+       -o-transition: all 0.2s linear;
+    }
+    
+    .slide-up-boxes a:hover h1 { 
+      margin-top: -40px; 
+      opacity: 0; 
+    }
+    
+    .slide-up-boxes div { 
+      position: relative; 
+      color: white; 
+      font: 12px/15px Georgia, Serif;
+      height: 40px; 
+      padding: 10px; 
+      opacity: 0; 
+      -webkit-transform: rotate(6deg); 
+      -webkit-transition: all 0.4s linear; 
+      -moz-transform: rotate(6deg); 
+      -moz-transition: all 0.4s linear; 
+      -o-transform: rotate(6deg); 
+      -o-transition: all 0.4s linear; 
+    }
+    .slide-up-boxes a:hover div { 
+      opacity: 1; 
+      -webkit-transform: rotate(0); 
+      -moz-transform: rotate(0); 
+      -o-transform: rotate(0); 
+    }
+    .slide-up-boxes a div { 
+      background:black;
+      color: orange; 
+    }
+
+
+
+
+
+
+
+.pickList{
+  float: right;
+}
+td select {
+  max-width: 190px;min-width: 190px;
+}
+td input{
+min-width: 190px;max-width: 190px;
+}
+button{
+  font-size: 1.3em;
+}
+html{
+background: url("bglines.png");
+border-image: url("bglines.png");
+}
+table{
+  text-align: center;
+}
+tfoot {
+  background-color: black;
+  color: white
+}
+thead {
+  background-color: black;
+  color: white
+}
+.yui-dt-odd {
+  background-color: black;
+  color:skyblue ;
+  font-size: 1.3em; 
+}
+.yui-dt-even {
+  background-color: black;
+  color: salmon;
+  font-size: 1.3em; 
+}
+
+table {
+  width:100%;
+}
+</style>
+    <script type="text/javascript" language="javascript" src="aws/DataTables-1.9.2/media/js/jquery.js">
+      </script>
+   <script type="text/javascript" language="javascript" src="aws/jquery-picklist-0.9.1/jquery.ui.widget.js">
+      </script>
+         <script type="text/javascript" language="javascript" src="aws/jquery-picklist-0.9.1/jquery-picklist.min.js">
+      </script>
+      <script type="text/javascript" language="javascript" src="aws/DataTables-1.9.2/media/js/jquery.dataTables.js">
+      </script>
+
+   
+      <script type="text/javascript" language="javascript" src="aws/js/scratchpad.js">
+      
+      </script>
+      <script type="text/javascript" language="javascript" src="aws/js/hmacsha1.js">
+      </script>
+   
+
+		<script type="text/javascript" src="jquery-ui/js/jquery-ui-1.9.22.custom.min.js"></script>
+    <script type="text/javascript" language="javascript" src="js/json2.js"></script>
+    
+<script type="text/javascript" src="http://yui.yahooapis.com/combo?2.9.0/build/yahoo-dom-event/yahoo-dom-event.js&2.9.0/build/connection/connection-min.js&2.9.0/build/element/element-min.js&2.9.0/build/datasource/datasource-min.js&2.9.0/build/datatable/datatable-min.js"></script>
+    
+
+<script type="text/javascript">
+var authorization_attempt=0;
+var regionEndpoint = "https://ec2.amazonaws.com/";
+var objStr=localStorage.getItem('account_localStorage');
+var accObj=JSON.parse(objStr);//deserialization
+if(accObj!=null)
+{ 
+       authorization_attempt=1;
+       iAccessKey=accObj.accKey;
+       iSecretKey=accObj.accSecretKey;
+}
+else{alert("enter your credentials for the Amazon account and Refresh");}                 
+function changeCSS()
+{
+          $('td').css('backgroundColor', 'black');
+              $('tr:even').each(function () 
+              {
+                $(this).find('td:even').css('color', 'hotpink');
+                $(this).find('td:odd').css('color', 'blueviolet');
+              });
+              $('tr:odd').each(function () 
+              {
+                $(this).find('td:even').css('color', 'yellowgreen');
+                $(this).find('td:odd').css('color', 'tomato');
+              });
+}
+
+if (authorization_attempt==1)
+{
+console.log("yui");
+var myDataTable;
+YAHOO.util.Event.addListener("t1", "click", function() { 
+    
+    YAHOO.example.XHR_XML = function() {
+       
+        var myColumnDefs = [
+            {key:"instanceId",label:"Instance Id"},{key:"imageId",label:"AMI"}, {key:"kernelId",label:"AKI"},{key:"name",label:"State"}        
+        ];
+
+        var u=generateMySignedURL("DescribeInstances",iAccessKey,iSecretKey,regionEndpoint,"2009-08-15");
+        var myDataSource = new YAHOO.util.DataSource(u);
+        myDataSource.connMethodPost = true;
+        myDataSource.responseType = YAHOO.util.DataSource.TYPE_XML;
+        myDataSource.responseSchema = {
+            resultNode: "instancesSet",
+            fields: ["instanceId","imageId","kernelId","name"]
+        };
+
+       
+        myDataTable = new YAHOO.widget.DataTable("xml", myColumnDefs,
+                myDataSource,{ 
+                       
+                      selectionMode:"single" 
+                });
+         
+         this.myDataTable.subscribe("rowClickEvent", function(e)
+          {
+            
+
+            cloud=new Object();
+            cloud.InstanceId=this.getRecordSet().getRecord(e.target.id).getData ("instanceId");
+                 $.ajax
+                      ({
+                      type: "GET",
+                      url:generateMySpecialSignedURL("TerminateInstances",cloud,iAccessKey,iSecretKey,regionEndpoint,"2009-08-15"),
+                      dataType: "xml",
+                      success: function(xml) 
+                        { 
+                          $( this ).dialog( "close" );                
+                        }
+                      }).error(function() 
+                      {
+                              alert("Wrong parameters.Unable to stop instance");
+                      });
+            
+          }); 
+
+
+    }();
+   
+
+
+});
+}
+</script>
+
+
+
+
+
+		<script type="text/javascript">
+
+			$(function(){
+
+
+
+
+
+
+    
+              var $credDialog = $('#credDialog')
+            .html('<table class="display" id="credTable"><tbody><tr><td>Account Name</td><td><input type="text" id="accountName"/></td></tr><tr><td>AWS Access Key</td><td><input type="text" id="accessKey"/></td></tr><tr><td>AWS Secret Access Key</td><td><input type="password" id="secretKey"/></td></tr></tbody></table>')
+            .dialog(
+            {
+
+              autoOpen: false,
+              resizable: false,
+              modal: true,
+              height: 370,
+              width: 425,
+              buttons: 
+                [ {
+                    id:"add",
+                    text:"Add",
+                      
+                    click: function() 
+                    {
+                      var acName=$('#accountName').val();
+                      var acKey=$('#accessKey').val();
+                      var acSecretKey=$('#secretKey').val();
+                      if(acName!=null&&acKey!=null&&secretKey!=null)
+                      {
+                        var obj=new Object();
+                        obj.accName=acName;
+                        obj.accKey=acKey;
+                        obj.accSecretKey=acSecretKey;
+                        
+                        var str=JSON.stringify(obj);//serialization
+                        saveChanges('account_localStorage',str);
+                       }
+                      $( this ).dialog( "close" );
+                    }
+
+                  }
+                ]
+            });
+
+
+                $('#credButton').click( function () 
+              {
+
+                  $credDialog.dialog('open'); 
+                  
+                  
+                    
+                    var objStr=localStorage.getItem('account_localStorage');
+                    var accObj=JSON.parse(objStr);//deserialization
+                    if(accObj!=null)
+                    {
+                    $('#accountName').val(accObj.accName);
+                    $('#accessKey').val(accObj.accKey);
+                    $('#secretKey').val(accObj.accSecretKey);
+                    }
+                    
+                    
+                    
+                    
+                
+              } );
+				// Tabs
+				$('#tabs').tabs();
+
+				// Dialog
+				$('#dialog').dialog({
+					autoOpen: false,
+					width: 500,
+
+					buttons: {
+						"Remove": function() 
+            {
+						
+            },
+						"Add": function() 
+            {
+							
+						},
+						"Close": function() {
+							$(this).dialog("close");
+						},
+					}
+				});
+
+				// Dialog Link
+				$('#dialog_link').click(function(){
+					$('#dialog').dialog('open');
+					return false;
+				});
+
+				//hover states on the static widgets
+				$('#dialog_link, ul#icons li').hover(
+					function() { $(this).addClass('ui-state-hover'); },
+					function() { $(this).removeClass('ui-state-hover'); }
+				);
+
+			});
+		</script>
+		
+	    
+
+
+
+
+  		<script type="text/javascript" language="javascript">
+      $(document).ready(function() 
+      { 
+
+if (authorization_attempt==1)
+{ 
+others(regionEndpoint);
+var $regionDialog = $('#regionDialog')
+            .html('<table id="reg"><tbody></tbody></table>')
+            .dialog(
+            {
+              autoOpen: false,
+              resizable: false,
+              modal: true,
+              buttons: 
+                [
+
+                    {
+                      id:"add",
+                      text:"Add",
+                      click: function() 
+                      {
+                        regionEndpoint = $("#ec2region").val();
+                        $(this).dialog("close");
+                        others("https://"+regionEndpoint+"/");
+                       }
+                    }
+                ]
+              });
+
+
+
+
+       var str9="";
+        $.ajax
+        ({
+        type: "GET",
+        url:generateMySignedURL("DescribeRegions",iAccessKey,iSecretKey,regionEndpoint,"2009-08-15"),
+        dataType: "xml",
+        success: function(xml) 
+          { 
+            $(xml).find('item').each(function()
+              {
+                str9+="<option value="+$(this).find('regionEndpoint').text()+">"+$(this).find('regionName').text()+"</option>";
+                  
+
+                
+              });
+            
+            $('#reg > tbody').append('<tr><td>Region</td><td><select id="ec2region"><option value="https://ec2.amazonaws.com/">EC2</option>'+str9+'</select></td></tr>');
+            
+          }
+        }).error(function() {
+    alert("Error!!\n 1.Network Problem ,or \n 2.Unathorized attempt (Enter credentials again and refresh)");
+});    
+
+
+
+
+        $('#regionButton').click( function () 
+              {
+                  $regionDialog.dialog('open'); 
+                  
+
+                 
+              } );
+
+
+
+
+
+//stop instance dialog
+function others(regionEndpoint)
+{
+
+            var $stopinstancedialog = $('#stdialog')
+            .html('<tr><td>Instance Id</td><td><input type="text" id="iid"/><br/></td></tr>')
+            .dialog(
+            {
+              autoOpen: false,
+              resizable: false,
+              modal: true,
+              buttons: 
+                [
+
+                   
+                    
+                    {
+                      id:"stop",
+                      text:"Stop",
+                      click: function() 
+                      {
+                      $.ajax
+                      ({
+                      type: "GET",
+                      url:generateMySignedURL("TerminateInstances",$('#iid').val(),iAccessKey,iSecretKey,regionEndpoint,"2009-08-15"),
+                      dataType: "xml",
+                      success: function(xml) 
+                        { 
+                          $( this ).dialog( "close" );                
+                        }
+                      }).error(function() 
+                      {
+                              alert("Wrong parameters.Unable to stop instance");
+                      });
+                      }
+                    }
+                ]
+            });
+
+   
+        var $dialog = $('#dialog')
+            .html('<table id="tb1"><tr><td>AMI ID<td><td><input type="text" id="amiId"/><br/></td></tr><tr><td>AMI Manifest <td><td><input type="text" id="amiManifest"/><br/></td></tr><tr><td>AKI ID <td><td><input type="text" id="akiId"/><br/></td></tr><tr><td>ARI ID <td><td><input type="text" id="ariId"/><br/></td></tr><tr><td>Instance Type <td><td><select id="instanceType"><option value="t1.micro">t1.micro</option><option value="m1.small">m1.small</option></select><br/><td/></tr><tr><td>Minimum number of instances<td><td><input type="text" id="min" value="1"/><br/></td></tr><tr><td>Maximum number of instances<td><td><input type="text" id="max" value="1"/><br/></td></tr></table>')
+            .dialog(
+            {
+              autoOpen: false,
+              resizable: false,
+              modal: true,
+              buttons: 
+                [
+
+                    
+                    {
+                      id:"launch",
+                      text:"Launch",
+                      click: function() 
+                    {
+                      
+                      cloud=new Object();
+                      cloud.ImageId=$('#amiId').val();
+                      cloud.MinCount=$('#min').val();
+                      cloud.MaxCount=$('#max').val();
+                      if($("#keypair").val()!="any")
+                      {
+                        cloud.KeyName=$("#keypair").val();
+                      }
+                      
+   
+                      //var pickListLength=
+                      /** SecurityGroup.01 appscale
+                          SecurityGroup.11  default
+                          SecurityGroup.21  jclouds#jcloud**/
+ try{                    
+                     if($("#pickList").val().length>0)
+                     {
+                      //propertyName="SecurityGroup.01";
+                     // propertyValue=$("#pickList").val()[0];
+                      cloud.SecurityGroup=$("#pickList").val()[0];
+                     }
+}
+catch(err)
+  {
+  alert(err.message);
+  }
+                      cloud.InstanceType=$("#instanceType").val();
+                      if($("#availabiltyzone").val()!="none")
+                      {
+                       cloud.AvailabilityZone=$("#availabiltyzone").val();
+                      }
+                      if($("#akiId").val()!="")
+                      {
+                        cloud.KernelId=$('#akiId').val();
+                      }
+                      if($("#ariId").val()!="")
+                      {
+                        cloud.RamdiskId=$("#ariId").val();
+                      }
+                      
+                                 
+                     $.ajax
+                      ({
+                      type: "GET",
+                      url:generateMySpecialSignedURL("RunInstances",cloud,iAccessKey,iSecretKey,regionEndpoint,"2009-08-15"),
+                      dataType: "xml",
+                      success: function(xml) 
+                        { 
+                          $( this ).dialog( "close" );                
+                        }
+                      }).error(function() 
+                      {
+                              alert("Wrong parameters.Unable to start instance");
+                      });  
+ 
+
+
+
+                    }
+                  },
+
+                   {  id:"cancel",
+                      text:"Cancel",
+                      click: function() 
+                    {
+                      $( this ).dialog( "close" );
+                    }
+                  }
+                ]
+            });
+
+            
+        
+        var str1="";
+        $.ajax
+        ({
+        type: "GET",
+        url:generateMySignedURL("DescribeAvailabilityZones",iAccessKey,iSecretKey,regionEndpoint,"2009-08-15"),
+        dataType: "xml",
+        success: function(xml) 
+          { 
+            $(xml).find('item').each(function()
+              {
+                str1+="<option value="+$(this).find('zoneName').text()+">"+$(this).find('zoneName').text()+" ("+$(this).find('zoneState').text()+") "+"</option>";
+                
+              });
+            
+            $('#tb1 > tbody').append('<tr><td>Availability Zone</td><td></td><td><select id="availabiltyzone"><option value="none">&lt;none&gt;</option>'+str1+'</select></td></tr>');
+            
+          }
+        }).error(function() {
+    alert("error");
+});    
+
+        var str2="";
+        $.ajax
+        ({
+        type: "GET",
+        url: generateMySignedURL("DescribeKeyPairs",iAccessKey,iSecretKey,regionEndpoint,"2009-08-15"),
+        dataType: "xml",
+        success: function(xml) 
+          { 
+            $(xml).find('item').each(function()
+              {
+                str2+="<option value="+$(this).find('keyFingerprint').text()+">"+$(this).find('keyName').text()+"</option>";
+                
+              });
+            
+            $('#tb1 > tbody').append('<tr><td>KeyPair</td><td></td><td><select id="keypair"><option value="any">&lt;any&gt;</option>'+str2+'</select></td></tr>');
+            
+          }
+        });  
+
+
+
+        var str3="";
+        $.ajax
+        ({
+        type: "GET",
+        url: generateMySignedURL("DescribeSecurityGroups",iAccessKey,iSecretKey,regionEndpoint,"2009-08-15"),
+        dataType: "xml",
+        success: function(xml) 
+          { 
+            
+            $(xml).find('ownerId').next().each(function()
+              {
+                
+               
+                    str3+="<option value="+$(this).text()+">"+$(this).text()+"</option>";
+                
+
+              });
+            $(xml).find('ipPermissions').each(function()
+              {
+                
+                                
+              });
+            
+            $dialog.append('<br/><div><select id="pickList" multiple="multiple">'+str3+'</select></div>');
+            $("#pickList").pickList();
+          }
+        });  
+        
+        
+
+       
+   
+        
+        var i = 0;
+        var aaData = new Array();
+        $.ajax
+        ({
+        type: "GET",
+        url: generateMySignedURL("DescribeImages",iAccessKey,iSecretKey,regionEndpoint,"2009-08-15"),
+        dataType: "xml",
+        success: function(xml) 
+          { 
+            var currentdate =new Date();
+           console.log("just entered success callback"+currentdate.getMinutes());
+             $(xml).find('item').each(function()
+               {
+
+            
+                 var item=[$(this).find('imageId').text(),
+                 $(this).find('imageLocation').text(),
+                 $(this).find('imageState').text(),
+                 $(this).find('imageOwnerId').text(),
+                 $(this).find('isPublic').text(),
+                 $(this).find('architecture').text(),
+                 $(this).find('imageType').text(),
+                 $(this).find('kernelId').text(),
+                 $(this).find('ramdiskId').text()
+                 ];
+                 aaData[i]=item;
+                 i=i+1;
+              });
+                currentdate =new Date();
+                console.log("just converted XML -> JSON"+currentdate.getMinutes());
+                console.log(aaData);
+                 
+                
+           
+            
+
+              
+              oTable = $('#example').dataTable({"aaData":aaData,
+             "bProcessing": true,"bDeferRender": true,
+             "fnDrawCallback": function( oSettings ) 
+             {
+              this.$('td').css('backgroundColor', 'black');
+              this.$('tr:even').each(function () 
+              {
+                $(this).find('td:even').css('color', 'hotpink');
+                $(this).find('td:odd').css('color', 'blueviolet');
+              });
+              this.$('tr:odd').each(function () 
+              {
+                $(this).find('td:even').css('color', 'yellowgreen');
+                $(this).find('td:odd').css('color', 'tomato');
+                               
+              });
+
+           
+
+              this.$('tr').dblclick( function () 
+              {
+                    $('#amiId').val("");
+                    $('#akiId').val("");
+                    $('#ariId').val("");
+                 
+                 var data = oTable.fnGetData( this );
+                 
+                  if(data[0].indexOf('aki') !== -1)
+                    $('#akiId').val(data[0])
+                  else
+                  if(data[0].indexOf('ari') !== -1)
+                    $('#ariId').val(data[0])
+                  else
+                  if(data[0].indexOf('ami') !== -1)
+                  {
+                    $('#amiId').val(data[0]);
+                    $('#akiId').val(data[7]);
+                    $('#ariId').val(data[8]);
+                  }
+                  
+                  $('#amiManifest').val(data[1].substr((data[1].lastIndexOf("/"))+1));
+                  
+                  $dialog.dialog('open');
+                  if($('#amiId').val(data[0])=="")
+                  {
+                  $('#launch').attr('disabled',true);
+                  }
+              } );
+
+          
+
+             }});
+               currentdate =new Date();
+                console.log("just formed a dataTable in jQuery"+currentdate.getMinutes());
+              
+              oTable.$('tr').dblclick( function () 
+              {
+
+                 
+                 var data = oTable.fnGetData( this );
+                  if(data[0].indexOf('aki') !== -1)
+                    $('#akiId').val(data[0])
+                  else
+                  if(data[0].indexOf('ari') !== -1)
+                    $('#ariId').val(data[0])
+                  else
+                  if(data[0].indexOf('ami') !== -1)
+                  {
+                    $('#amiId').val(data[0]);
+                    $('#akiId').val(data[7]);
+                    $('#ariId').val(data[8]);
+                  }
+                  
+                  $('#amiManifest').val(data[1].substr((data[1].lastIndexOf("/"))+1));
+                  
+                  $dialog.dialog('open');
+                  if($('#amiId').val(data[0])=="")
+                  {
+                  $('#launch').attr('disabled',true);
+                  }
+              } );
+
+              oTable.$('tr').click( function () 
+              {
+                 
+                 $(this).css('background-color', 'grey');
+              } );
+              
+
+          }
+
+        });
+}//added 14Oct
+}//added 14Oct
+});
+
+
+
+
+
+
+  
+     </script>
+     <script type="text/javascript">
+          function saveChanges(key, value){
+            localStorage.setItem(key,value);
+          }
+          
+
+
+     </script>
+
+     
+		
+	</head>
+	<body>
+
+    <section class="slide-up-boxes">
+      <a href="http://hacks.developer.yahoo.com/hack/yahoo-open-hack-india-2012/chromefox/event_2/hack_202">
+        <h1>chromeFox...</h1>
+        <div>Hola Chicos! Your wait for a chrome plugin to boot into your amazon/cloud machines is now over!!</div>       
+      </a>
+    </section>
+	
+		
+		<button id="credButton" class="ui-state-default ui-corner-all"><span class="ui-icon ui-icon-newwin"></span>Credentials</button>
+     <button id="regionButton" class="ui-state-default ui-corner-all"><span class="ui-icon ui-icon-newwin"></span>Regions</button>
+
+		<br> </br>
+
+
+
+		<!-- Tabs -->
+		
+		<div id="tabs" style="margin-top:40px">
+			<ul>
+        <li><a id="t2" href="#tabs-2">Images</a></li>
+				<li><a id="t1" href="#tabs-1">Instances</a></li>
+				
+				
+			</ul>
+			
+      <div id="tabs-1">
+        <div id="xml"></div>
+     
+			</div>
+			<div id="tabs-2">
+        
+        <table cellpadding="0" cellspacing="0" border="0" class="display" id="example">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Location</th>
+            <th>State</th>
+            <th>OwnerId</th>
+            <th>Public</th>
+            <th>Architecture</th>
+            <th>Image Type</th> 
+            <th>Kernel Id</th>
+            <th>Ramdisk Id</th>        
+          </tr>
+        </thead>
+        <tbody>
+          <!--populated from jQuery-->
+        </tbody>
+        <tfoot>
+         
+        </tfoot>
+      </table></div>
+			
+		</div>
+
+    <div  id="regionDialog" title="Regions">
+      
+    </div>
+    <div  id="credDialog" title="Credentials">
+    </div>
+    
+		<div  id="dialog" title="Launch new Instances">
+			<table id="tbl" border="1">
+         		<tbody>
+          		</tbody>
+      		</table>
+
+
+
+			
+		</div>
+
+		
+
+
+ 
+
+      
+    </div>
+		
+
+			
+
+
+		
+	</body>
+</html>
+
+
